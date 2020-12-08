@@ -1,11 +1,12 @@
 package com.mianasad.clienttutorial;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.app.ProgressDialog;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.widget.ProgressBar;
+import android.view.View;
 import android.widget.Toast;
 
 import com.android.volley.AuthFailureError;
@@ -15,56 +16,76 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
-import com.anupkumarpanwar.scratchview.ScratchView;
-import com.mianasad.clienttutorial.databinding.ActivityScratchBinding;
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.LoadAdError;
+import com.google.android.gms.ads.rewarded.RewardItem;
+import com.google.android.gms.ads.rewarded.RewardedAd;
+import com.google.android.gms.ads.rewarded.RewardedAdCallback;
+import com.google.android.gms.ads.rewarded.RewardedAdLoadCallback;
+import com.mianasad.clienttutorial.databinding.ActivityRewardedBinding;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Random;
 
-public class ScratchActivity extends AppCompatActivity {
+public class RewardedActivity extends AppCompatActivity {
 
-    ActivityScratchBinding binding;
+    ActivityRewardedBinding binding;
+
+    private RewardedAd rewardedAd;
     SharedPreferences preferences;
     ProgressDialog dialog;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        binding = ActivityScratchBinding.inflate(getLayoutInflater());
+        binding = ActivityRewardedBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
+
         dialog = new ProgressDialog(this);
         dialog.setMessage("Updating Coins...");
         dialog.setCancelable(false);
 
         preferences = getSharedPreferences("User", MODE_PRIVATE);
 
-        Random random = new Random();
-        int generatedCoins = random.nextInt(100);
+        rewardedAd = new RewardedAd(this, "ca-app-pub-3940256099942544/5224354917");
 
-        binding.coins.setText(String.format("%d %s", generatedCoins, "Coins"));
-
-        binding.scratchView.setRevealListener(new ScratchView.IRevealListener() {
+        AdRequest adRequest = new AdRequest.Builder().build();
+        rewardedAd.loadAd(adRequest, new RewardedAdLoadCallback() {
             @Override
-            public void onRevealed(ScratchView scratchView) {
-                updateCoins(generatedCoins);
+            public void onRewardedAdLoaded() {
+                super.onRewardedAdLoaded();
             }
 
             @Override
-            public void onRevealPercentChangedListener(ScratchView scratchView, float percent) {
-                if(percent >= 30) {
-                    scratchView.reveal();
+            public void onRewardedAdFailedToLoad(LoadAdError loadAdError) {
+                super.onRewardedAdFailedToLoad(loadAdError);
+            }
+        });
+
+        binding.watch.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(rewardedAd.isLoaded()) {
+                    rewardedAd.show(RewardedActivity.this, new RewardedAdCallback() {
+                        @Override
+                        public void onUserEarnedReward(@NonNull RewardItem rewardItem) {
+//                            int coins = 35;
+                            updateCoins(rewardItem.getAmount());
+                        }
+                    });
                 }
             }
         });
+
     }
 
     void updateCoins(int coins) {
         dialog.show();
-        RequestQueue queue = Volley.newRequestQueue(ScratchActivity.this);
+        RequestQueue queue = Volley.newRequestQueue(RewardedActivity.this);
 
         StringRequest request = new StringRequest(Request.Method.POST, "http://mianasad.com/client/updatecoins.php", new Response.Listener<String>() {
             @Override
@@ -73,9 +94,9 @@ public class ScratchActivity extends AppCompatActivity {
                 try {
                     JSONObject object = new JSONObject(response);
                     if(object.getBoolean("error")) {
-                        Toast.makeText(ScratchActivity.this, object.getString("message"), Toast.LENGTH_SHORT).show();
+                        Toast.makeText(RewardedActivity.this, object.getString("message"), Toast.LENGTH_SHORT).show();
                     } else {
-                        Toast.makeText(ScratchActivity.this, "Coins updated.", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(RewardedActivity.this, "Coins updated.", Toast.LENGTH_SHORT).show();
                     }
                 } catch (JSONException e) {
                     e.printStackTrace();
@@ -92,7 +113,6 @@ public class ScratchActivity extends AppCompatActivity {
                 Map<String, String> data = new HashMap<>();
                 data.put("id", preferences.getString("userid", ""));
                 data.put("coins", String.valueOf(coins));
-                data.put("passkey", "132987465");
 
                 return data;
             }

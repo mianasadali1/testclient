@@ -1,6 +1,7 @@
 package com.mianasad.clienttutorial;
 
 import android.content.Context;
+import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -34,6 +35,13 @@ public class UsersAdapter extends RecyclerView.Adapter<UsersAdapter.UsersViewHol
         User user = users.get(position);
         holder.binding.name.setText(user.getName());
         holder.binding.score.setText(String.valueOf(user.getCoins()));
+
+        holder.itemView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+            }
+        });
     }
 
     @Override

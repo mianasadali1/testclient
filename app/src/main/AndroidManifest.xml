@@ -13,7 +13,15 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.ClientTutorial"
         android:usesCleartextTraffic="true">
-        <activity android:name=".ScratchActivity"></activity>
+        <activity android:name=".RewardedActivity"></activity>
+
+        <meta-data
+            android:name="com.google.android.gms.ads.APPLICATION_ID"
+            android:value="ca-app-pub-3940256099942544~3347511713" />
+
+        <activity android:name=".SpinWheelActivity" />
+        <activity android:name=".WalletActivity" />
+        <activity android:name=".ScratchActivity" />
         <activity android:name=".LeaderboardsActivity" />
         <activity android:name=".RegisterActivity" />
         <activity android:name=".LoginActivity">
